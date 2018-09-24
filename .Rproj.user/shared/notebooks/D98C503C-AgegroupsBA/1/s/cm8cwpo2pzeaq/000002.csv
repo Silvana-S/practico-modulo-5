@@ -1,0 +1,27 @@
+"0","geom_neighborhoods<- ""../data/barrios_badata.shp"""
+"0","geom_neighborhoods<- st_read(geom_neighborhoods)"
+"1","Reading layer `"
+"1","barrios_badata"
+"1","' from data source `"
+"1","C:\Users\Julio Eduardo\Desktop\learn-chapter-5-master\practico modulo 5\data\barrios_badata.shp"
+"1","' using driver `"
+"1","ESRI Shapefile"
+"1","'"
+"1","
+"
+"1","Simple feature collection with 48 features and 4 fields"
+"1","
+"
+"1","geometry type:  POLYGON
+"
+"1","dimension:      XY
+"
+"1","bbox:           "
+"1","xmin: 93743.42 ymin: 91566.42 xmax: 111752 ymax: 111285.1"
+"1","
+"
+"1","epsg (SRID):    NA
+"
+"1","proj4string:    +proj=tmerc +lat_0=-34.6297166 +lon_0=-58.4627 +k=0.9999980000000001 +x_0=100000 +y_0=100000 +ellps=intl +units=m +no_defs
+"
+"0","geom_neighborhoods$BARRIO <- as.character(geom_neighborhoods$BARRIO)"

@@ -1,0 +1,1 @@
+"0","popgeomneighborhood <- left_join(geom_neighborhoods, pop_neighborhoods6, by=c(""BARRIO"" = ""Barrio""))"

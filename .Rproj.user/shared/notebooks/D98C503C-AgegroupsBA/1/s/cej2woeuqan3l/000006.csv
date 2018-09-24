@@ -1,0 +1,4 @@
+"0","pop_neighborhoods <- read_excel(""./data/PB_barrio_ARIP_CNP2010.xls"", skip= 1, range = cell_cols(2:65))
+"
+"2","Error: `path` does not exist: ‘./data/PB_barrio_ARIP_CNP2010.xls’
+"

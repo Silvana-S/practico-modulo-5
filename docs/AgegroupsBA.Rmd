@@ -1,0 +1,170 @@
+---
+title: "Age Groups in Buenos Aires Neighborhoods"
+author: ""
+date: ""
+output: html_document
+---
+
+
+
+####*Silvana Santiago*  
+####*Buenos Aires, september 2018*
+.  
+
+                                    
+                                                                   
+
+
+
+  
+  
+>This practice applies concepts of the [sixth chapter ](https://learn.r-journalism.com/en/publishing/) of the Knight's Foundation course, [R for Journalists](https://journalismcourses.org/intro-r.html?utm_source), by Andrew Ba Tran. He is an investigative data reporter at the Washington Post.   
+
+  
+
+#####Local data
+
+I am from Buenos Aires, Argentina. Here, there is no long tradition on open data and, more importantly, there are always such heated arguments on how or whom is suppossed to watch after those numbers that it seems that people just agree in that they completely desagree. 
+
+For that very same reason I wanted to play a little bit with what it was available. Only local data. I've found that the Census Data from 2010 had enough information to work with. And here are the results.
+
+
+
+#####The packages I've used
+```{r packages, knitr::opts_chunk$set, message = FALSE, warning = FALSE}
+
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(tigris)
+library(sf)
+library(stringr)
+library(viridis)
+```
+
+##### First Attempt
+
+My intention was to map the population of the city of Buenos Aires. My first attempt with the data I've found at [BAdata](https://data.buenosaires.gob.ar/dataset/barrios), brought two mismatched data sets. One of them was counting the population not taking into an account that from 2005 on there was a new neighborhood, that splited from a larger one. Anyhow, I was proud of my map.  
+So I've searched for a while and found another data set at the [Statistical Bureau of Buenos Aires](http://www.estadisticaciudad.gob.ar/eyc/?p=28008) that this time had matching neighborhoods. It was an Excel file, with undefined columns. Readxl read them as character types.
+
+
+
+```{r excel}
+
+pop_neighborhoods <- read_excel("../data/PB_barrio_ARIP_CNP2010.xls", skip= 1, range = cell_cols(2:65))
+
+```
+
+##### Then I performed some wrangling
+I dropped two columns, several rows, and found a neat way to get rid of the ones that started with *x*.  
+
+
+```{r wrangling}
+pop_neighborhoods2 <- select(pop_neighborhoods, -"Total varón", -"Total mujer", -starts_with("X__"))
+pop_neighborhoods3 <- filter(pop_neighborhoods2, row_number() != 1L) 
+pop_neighborhoods4 <- filter(pop_neighborhoods3,Barrio !="Total")
+```
+
+##### Spanish characters
+I tried a method with the stringi package, opening the project with encoding but it did not work. Every time I open the files I have to rewrite the variables again. Here I also changed some neighborhood names that were written differently.
+
+```{r sp}
+pop_neighborhoods4[41,1] = "Nuñez"
+pop_neighborhoods4[31,1] = "Villa Gral. Mitre"
+pop_neighborhoods4[11,1] = "Boca"
+
+```
+
+##### Changing column types
+I know that there it must be a way of using code for multiple columns, but the ones I've tried did not work. So these ones stayed.
+
+```{r coltypes}
+pop_neighborhoods4$`0-4` <- as.numeric(pop_neighborhoods4$`0-4`)
+pop_neighborhoods4$`5-9` <- as.numeric(pop_neighborhoods4$`5-9`)
+pop_neighborhoods4$`10-14` <- as.numeric(pop_neighborhoods4$`10-14`)
+pop_neighborhoods4$`15-19` <- as.numeric(pop_neighborhoods4$`15-19`)
+pop_neighborhoods4$`20-24` <- as.numeric(pop_neighborhoods4$`20-24`)
+pop_neighborhoods4$`25-29` <- as.numeric(pop_neighborhoods4$`25-29`)
+pop_neighborhoods4$`30-34` <- as.numeric(pop_neighborhoods4$`30-34`)
+pop_neighborhoods4$`35-39` <- as.numeric(pop_neighborhoods4$`35-39`)
+pop_neighborhoods4$`40-44` <- as.numeric(pop_neighborhoods4$`40-44`)
+pop_neighborhoods4$`45-49` <- as.numeric(pop_neighborhoods4$`45-49`)
+pop_neighborhoods4$`50-54` <- as.numeric(pop_neighborhoods4$`50-54`)
+pop_neighborhoods4$`55-59` <- as.numeric(pop_neighborhoods4$`55-59`)
+pop_neighborhoods4$`60-64` <- as.numeric(pop_neighborhoods4$`60-64`)
+pop_neighborhoods4$`65-69` <- as.numeric(pop_neighborhoods4$`65-69`)
+pop_neighborhoods4$`70-74` <- as.numeric(pop_neighborhoods4$`70-74`)
+pop_neighborhoods4$`75-79` <- as.numeric(pop_neighborhoods4$`75-79`)
+pop_neighborhoods4$`80-84` <- as.numeric(pop_neighborhoods4$`80-84`)
+pop_neighborhoods4$`85-89` <- as.numeric(pop_neighborhoods4$`85-89`)
+pop_neighborhoods4$`90-94` <- as.numeric(pop_neighborhoods4$`90-94`)
+pop_neighborhoods4$`95 y más` <- as.numeric(pop_neighborhoods4$`95 y más`)
+```
+
+
+##### Some math
+The idea was to have six age groups to compare.
+
+```{r math}
+pop_neighborhoods5 <- mutate(pop_neighborhoods4, `0-14` =(`0-4`+`5-9`+`10-14`)*100/`Total`,
+                               `15-29` =(`15-19`+`20-24`+`25-29`)*100/`Total`,
+                               `30-44` = (`30-34`+`35-39`+`40-44`)*100/`Total`,
+                              `45-59` = (`45-49`+ `50-54`+ `55-59`)*100/`Total`,
+                               `60-74` = (`60-64`+ `65-69`+`70-74`)*100/`Total`,
+                               `75-+95` = (`75-79`+`80-84` +`85-89`+`90-94`+ `95 y más`)*100/`Total`)
+```
+
+##### Upper case
+All the neighborhood names needed to be written in the same way, before joining the data sets
+
+```{r upper}
+pop_neighborhoods5$Barrio <-str_to_upper(pop_neighborhoods5$Barrio)
+
+```
+
+##### Variables
+Creating the variables to be ready for the mapping
+
+```{r variables}
+pop_neighborhoods6 <- pop_neighborhoods5 %>% gather("ages",  "age group pct", 23:28) 
+
+```
+
+##### Neighborhood shapefile
+Read it and changed the column type
+
+```{r shapefile, results ="hide", message=FALSE, warning=FALSE}
+
+geom_neighborhoods<- "../data/barrios_badata.shp"
+geom_neighborhoods<- st_read(geom_neighborhoods)
+geom_neighborhoods$BARRIO <- as.character(geom_neighborhoods$BARRIO)
+
+```
+##### Joining data sets
+
+```{r}
+
+popgeomneighborhood <- left_join(geom_neighborhoods, pop_neighborhoods6, by=c("BARRIO" = "Barrio"))
+
+```
+
+##### Mapping
+Changed the palette to "plasma" because it allowed a better contrast. Also set the ages strip at the bottom of the faceted maps, if not it was a little confusing. 
+
+```{r}
+popgeomneighborhood %>%
+ggplot(aes(fill = `age group pct`, color = `age group pct`)) +
+  facet_wrap(~ages, strip.position = "bottom") +
+  geom_sf() +
+  coord_sf() + 
+  scale_fill_viridis(direction=-1, option = "plasma") +
+  scale_color_viridis(direction=-1, option = "plasma") +
+  theme_void() +
+  theme(panel.grid.major = element_line(colour = 'transparent')) +
+  labs(title="Age groups in Buenos Aires Neighborhoods", caption="Source: Indec, Datos Argentina (datos.gob.ar)")
+
+
+```
+
+

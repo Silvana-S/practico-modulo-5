@@ -1,0 +1,43 @@
+---
+title: "Age Groups in Buenos Aires Neighborhoods"
+author: "Silvana Santiago"
+date: "23 de septiembre de 2018"
+output: html_document
+---
+###
+This exercise belongs to module number 5 of the Knight's Foundation course, R for Journalists by Andrew Ba Tran.
+
+
+```{r setup, knitr::opts_chunk$set, message = FALSE, warning = FALSE}
+
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(tigris)
+library(sf)
+library(stringr)
+library(viridis)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+
+pop_neighborhoods <- read_excel("data/PB_barrio_ARIP_CNP2010.xls", skip= 1, range = cell_cols(2:65))
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

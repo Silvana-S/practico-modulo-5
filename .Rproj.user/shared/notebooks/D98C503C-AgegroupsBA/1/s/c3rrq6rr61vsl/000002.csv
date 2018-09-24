@@ -1,0 +1,3 @@
+"0","pop_neighborhoods2 <- select(pop_neighborhoods, -""Total varón"", -""Total mujer"", -starts_with(""X__""))"
+"0","pop_neighborhoods3 <- filter(pop_neighborhoods2, row_number() != 1L) "
+"0","pop_neighborhoods4 <- filter(pop_neighborhoods3,Barrio !=""Total"")"
